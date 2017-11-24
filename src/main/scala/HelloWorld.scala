@@ -13,26 +13,31 @@ object HelloWorld {
     val conf = new SparkConf().setAppName("HelloWorld")
     val sc = new SparkContext(conf)
 
-    val cells = sc.parallelize(Array((100L, Array("A")), 
-        (200L, Array("B")), 
-        (300L, Array("C")), 
-        (400L, Array("D")), 
-        (500L, Array("E")), 
-        (600L, Array("F")), 
-        (700L, Array("G")), 
-        (800L, Array("H")), 
-        (900L, Array("I"))))
+    var cells_info = Array("A", "B", "C", "D", "E", "F", "G", "H", "I")
 
-    //100 200 300 400 500 600 700 800 900
-    val relationshipCells = sc.parallelize(Array(Edge(100L, 200L,"left"), 
-        Edge(200L, 300L,"left"), 
-        Edge(300L, 400L,"left"),
-        Edge(400L, 500L,"left"), 
-        Edge(500L, 600L,"left"), 
-        Edge(600L, 700L,"left"), 
-        Edge(700L, 800L,"left"),
-        Edge(800L, 900L,"left"),
-        Edge(900L, 100L,"left")))    
+    val cells = sc.parallelize(Array((1L, cells_info), 
+        (2L, cells_info), 
+        (3L, cells_info), 
+        (4L, cells_info), 
+        (5L, cells_info), 
+        (6L, cells_info), 
+        (7L, cells_info), 
+        (8L, cells_info), 
+        (9L, cells_info)))
+
+    //1 2 3 4 5 6 7 8 9
+    val relationshipCells = sc.parallelize(Array(Edge(5L, 2L,"1"), 
+        Edge(2L, 3L,"left"), 
+        Edge(3L, 4L,"left"),
+        Edge(4L, 5L,"left"), 
+        Edge(5L, 6L,"left"), 
+        Edge(6L, 7L,"left"), 
+        Edge(7L, 8L,"left"),
+        Edge(8L, 9L,"left"),
+        Edge(9L, 1L,"left")
+
+
+        ))    
     
     val latticeBefore = Graph(cells, relationshipCells)
 
