@@ -1,0 +1,39 @@
+Edge(1L, 2L,"3")
+Edge(1L, 5L,"4")
+Edge(1L, 4L,"5")
+
+Edge(3L, 6L,"5")
+Edge(3L, 5L,"6")
+Edge(3L, 2L,"7")
+
+Edge(9L, 8L,"7")
+Edge(9L, 5L,"8")
+Edge(9L, 6L,"1")
+
+Edge(7L, 4L,"1")
+Edge(7L, 5L,"2")
+Edge(7L, 8L,"3")
+
+Edge(2L, 3L,"3")
+Edge(2L, 6L,"4")
+Edge(2L, 5L,"5")
+Edge(2L, 4L,"6")
+Edge(2L, 1L,"7")
+
+Edge(6L, 9L,"5")
+Edge(6L, 8L,"6")
+Edge(6L, 5L,"7")
+Edge(6L, 2L,"8")
+Edge(6L, 3L,"1")
+
+Edge(8L, 7L,"5")
+Edge(8L, 4L,"6")
+Edge(8L, 5L,"7")
+Edge(8L, 6L,"8")
+Edge(8L, 9L,"1")
+
+Edge(4L, 1L,"1")
+Edge(4L, 2L,"2")
+Edge(4L, 5L,"3")
+Edge(4L, 8L,"4")
+Edge(4L, 7L,"5")
