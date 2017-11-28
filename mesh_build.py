@@ -47,7 +47,7 @@ print number_total_elements
 
 # build cell string
 element_id = 1
-cells_string = "Array("
+cells_string = "val cells = sc.parallelize(Array("
 for i in range(0,matrix_ids.shape[0]):
 	for j in range(0,matrix_ids.shape[1]):
 		matrix_ids[i][j] = element_id
@@ -55,7 +55,7 @@ for i in range(0,matrix_ids.shape[0]):
 		if element_id != number_total_elements:
 			cells_string += ","
 		element_id += 1
-cells_string += ")"
+cells_string += "))"
 print cells_string
 
 
@@ -68,7 +68,7 @@ print matrix_ids
 # neighbors
 
 # neighbors set 1 => 3 elements neighbors
-string_neighbor = ""
+string_neighbor = "val relationshipCells = sc.parallelize(Array("
 # first element of set 1
 element_id = matrix_ids[0][0]
 neighbor_1 = matrix_ids[0][1]
@@ -232,6 +232,8 @@ for line in range(1,matrix_ids.shape[0] - 1):
 		direction = 8
 		string_neighbor += "Edge(%dL,%dL,'%d')," % (element_id,neighbor_8,direction)
 		
+string_neighbor = string_neighbor[0:-1]
+string_neighbor += "))"
 print string_neighbor
 
 '''eq_1 = X*Y - (X - 1)
