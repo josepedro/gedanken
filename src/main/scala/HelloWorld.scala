@@ -13,16 +13,15 @@ object HelloWorld {
     val conf = new SparkConf().setAppName("HelloWorld")
     val sc = new SparkContext(conf)
 
-    val cells = sc.parallelize(Array((1L,0.100000),
-        (2L,0.200000),
-        (3L,0.300000),
-        (4L,0.400000),
-        (5L,0.500000),
-        (6L,0.600000),
-        (7L,0.700000),
-        (8L,0.800000),
-        (9L,0.900000)))
-
+    val cells = sc.parallelize(Array((1L,Array(0, 0.1, 1,0,0,0,0,0,0)),
+        (2L,Array(0, 0.2,2,0,0,0,0,0,0)),
+        (3L,Array(0, 0.3,3,0,0,0,0,0,0)),
+        (4L,Array(0, 0.4,4,0,0,0,0,0,0)),
+        (5L,Array(0, 0.5,5,0,0,0,0,0,0)),
+        (6L,Array(0, 0.6,6,0,0,0,0,0,0)),
+        (7L,Array(0, 0.7,7,0,0,0,0,0,0)),
+        (8L,Array(0, 0.8,8,0,0,0,0,0,0)),
+        (9L,Array(0, 0.9,9,0,0,0,0,0,0))))
 
     val relationshipCells = sc.parallelize(Array(Edge(1L,7L,'1'),
         Edge(1L,8L,'2'),
@@ -97,28 +96,55 @@ object HelloWorld {
         Edge(5L,4L,'7'),
         Edge(5L,1L,'8')))
 
-    val latticeBefore = Graph(cells, relationshipCells)
-    latticeBefore.vertices.foreach(println)
-
+    var latticeBefore = Graph(cells, relationshipCells)
 
     println("Resposta =======================")
-    val cellsResultBefore = latticeBefore.mapVertices((id, attr) =>  (id, attr))
+    val cellsResultBefore = latticeBefore.mapVertices((id, attr) =>  (id, attr(1) + attr(2) ))
     cellsResultBefore.vertices.saveAsTextFile("Before.txt")
     println("Resposta =======================")
 
-    val cellsStreamed = 
-    latticeBefore.aggregateMessages[Double](tripletFields => { 
-        if (tripletFields.attr == '3'){
-            tripletFields.sendToDst(tripletFields.srcAttr)
+
+    var cellsStreamed = cells
+    for( a <- 1 to 2){
+        cellsStreamed = 
+        latticeBefore.aggregateMessages[Array[Double]](tripletFields => { 
+            if (tripletFields.attr == '1'){
+                var arrayDensity = tripletFields.dstAttr
+                arrayDensity(1) = tripletFields.srcAttr(1)
+                tripletFields.sendToDst(arrayDensity)
+            }
+            if (tripletFields.attr == '2'){
+                var arrayDensity = tripletFields.dstAttr
+                arrayDensity(2) = tripletFields.srcAttr(2)
+                tripletFields.sendToDst(arrayDensity)
+            }
+
+        },
+        (a, b) => (a))
+
+        latticeBefore = Graph(cellsStreamed, relationshipCells)     
+    }
+
+    /*val cellsStreamed = 
+    latticeBefore.aggregateMessages[Array[Double]](tripletFields => { 
+        if (tripletFields.attr == '1'){
+            var arrayDensity = tripletFields.dstAttr
+            arrayDensity(1) = tripletFields.srcAttr(1)
+            tripletFields.sendToDst(arrayDensity)
         }
+        if (tripletFields.attr == '2'){
+            var arrayDensity = tripletFields.dstAttr
+            arrayDensity(2) = tripletFields.srcAttr(2)
+            tripletFields.sendToDst(arrayDensity)
+        }
+
     },
     (a, b) => (a))
 
-    val latticeAfter = Graph(cellsStreamed, relationshipCells)
+    val latticeAfter = Graph(cellsStreamed, relationshipCells)*/
 
-    latticeAfter.vertices.foreach(println)
     println("Resposta =======================")
-    val cellsResultAfter = latticeAfter.mapVertices((id, attr) =>  (id, attr))
+    val cellsResultAfter = latticeBefore.mapVertices((id, attr) =>  (id, attr(1) + attr(2) ))
     cellsResultAfter.vertices.saveAsTextFile("After.txt")
     println("Resposta =======================")
 
