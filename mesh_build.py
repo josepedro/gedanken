@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 
 def get1(line, row, number_lines, number_rows):
 	if line == 0 and row == 0:
@@ -96,7 +97,7 @@ def get8(line, row, number_lines, number_rows):
 	else:
 		return [line - 1, row - 1]
 
-file_mesh_name = "mesh.txt" 
+file_mesh_name = sys.argv[1] 
 mesh_file = open(file_mesh_name, "r")
 
 content = mesh_file.read()
@@ -125,16 +126,26 @@ cells_string = "val cells = sc.parallelize(Array("
 for i in range(0,matrix_ids.shape[0]):
 	for j in range(0,matrix_ids.shape[1]):
 		matrix_ids[i][j] = element_id
-		print element_id
-		cells_string += "(%dL,%f)" % (element_id, matrix[i][j])
+		density = matrix[i][j]/9.
+
+		cells_string += "(%dL,Map(" % (element_id)
+		cells_string += "'1' -> %f," % (density)
+		cells_string += "'2' -> %f," % (density)
+		cells_string += "'3' -> %f," % (density)
+		cells_string += "'4' -> %f," % (density)
+		cells_string += "'5' -> %f," % (density)
+		cells_string += "'6' -> %f," % (density)
+		cells_string += "'7' -> %f," % (density)
+		cells_string += "'8' -> %f," % (density)
+		cells_string += "'9' -> %f))" % (density)
+
+
 		if element_id != number_total_elements:
 			cells_string += ","
 		element_id += 1
 cells_string += "))"
 print cells_string
 
-
-print matrix_ids
 # ---------------------------------------------------------
 
 # neighbors
