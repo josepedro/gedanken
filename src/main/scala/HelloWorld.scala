@@ -10,6 +10,155 @@ import scala.collection.mutable.ArrayBuffer
 
 // define main method (Spark entry point)
 object HelloWorld {
+
+    def get1( line:Int, row:Int, numberLines:Int, numberRows:Int) : Array[Int] = {
+        if(line == 0 && row == 0){
+            return Array(numberLines - 1, row)
+        }
+        else if(line == 0 && row == numberRows - 1){
+            return Array(numberLines - 1, numberRows - 1)
+        }
+        else if(line == 0 && row > 0 && row < numberRows - 1){
+            return Array(numberLines - 1, row)
+        }
+         else {
+            return Array(line - 1, row)
+        }
+    }
+
+    def get2( line:Int, row:Int, numberLines:Int, numberRows:Int) : Array[Int] = {
+        if(line == 0 && row == 0){
+            return Array(numberLines - 1, row + 1)
+        }
+        else if(line == 0 && row == numberRows - 1){
+            return Array(numberLines - 1, 0)
+        }
+        else if(line == numberLines - 1 && row == numberRows - 1){
+            return Array(numberLines - 2, 0)
+        }
+        else if(line == 0 && row > 0 && row < numberRows - 1){
+            return Array(numberLines - 1, row + 1)
+        }
+        else if(line > 0 && line < numberLines - 1 && row == numberRows - 1){
+            return Array(line - 1, 0)
+        }
+         else {
+            return Array(line - 1, row + 1)
+        }
+    }
+
+    def get3( line:Int, row:Int, numberLines:Int, numberRows:Int) : Array[Int] = {
+        if(line == 0 && row == numberRows - 1){
+            return Array(line, 0)
+        }
+        else if(line == numberLines - 1 && row == numberRows - 1){
+            return Array(numberLines - 1, 0)
+        }
+        else if(line > 0 && line < numberLines -1 && row == numberRows - 1){
+            return Array(line, 0)
+        }
+        else {
+            return Array(line, row + 1)
+        }
+    }
+
+    def get4( line:Int, row:Int, numberLines:Int, numberRows:Int) : Array[Int] = {
+        if (line == 0 && row == numberRows - 1){
+            return Array(1, 0)
+        }
+        else if(line == numberLines - 1 && row == numberRows - 1){
+            return Array(0, 0)
+        }
+        else if(line == numberLines - 1 && row == 0){
+            return Array(0, 1)
+        }
+        else if(line > 0 && line < numberLines - 1 && row == numberRows - 1){
+            return Array(line + 1, 0)
+        }
+        else if(line == numberLines - 1 && row > 0 && row < numberRows - 1){
+            return Array(0, row + 1)
+        }
+         else {
+            return Array(line + 1, row + 1)
+        }
+    }
+
+    def get5( line:Int, row:Int, numberLines:Int, numberRows:Int) : Array[Int] = {
+        if(line == numberLines - 1 && row == 0){
+            return Array(0, row)
+        }
+        else if(line == numberLines - 1 && row == numberRows - 1){
+            return Array(0, row)
+        }
+        else if(line == numberLines - 1 && row > 0 && row < numberRows - 1){
+            return Array(0, row)
+        }
+        else {
+            return Array(line + 1, row)
+        }
+    }
+
+    def get6( line:Int, row:Int, numberLines:Int, numberRows:Int) : Array[Int] = {
+        if (line == 0 && row == 0){
+            return Array(line + 1, numberRows - 1)
+        }
+        else if(line ==  numberLines - 1 && row == 0){
+            return Array(0, numberRows - 1)
+        }
+        else if(line == numberLines - 1 && row == numberRows - 1){
+            return Array(0, row - 1)
+        }
+        else if(line > 0 && line < numberLines - 1 && row == 0){
+            return Array(line + 1, numberRows - 1)
+        }
+        else if(line == numberLines - 1 && row > 0 && row < numberRows - 1){
+            return Array(0, row - 1)
+        }
+         else {
+            return Array(line + 1, row - 1)
+        }
+    }
+
+    def get7( line:Int, row:Int, numberLines:Int, numberRows:Int) : Array[Int] = {
+        if(line == 0 && row == 0){
+            return Array(line, numberRows - 1)
+        }
+        else if(line == numberLines - 1 && row == 0){
+            return Array(line, numberRows - 1)
+        }
+        else if(line > 0 && line < numberLines - 1 && row == 0){
+            return Array(line, numberRows - 1)
+        }
+        else {
+            return Array(line, row - 1)
+        }
+    }
+
+    def get8( line:Int, row:Int, numberLines:Int, numberRows:Int) : Array[Int] = {
+        if (line == 0 && row == 0){
+            return Array(numberLines - 1, numberRows - 1)
+        }
+        else if(line == 0 && row == numberRows - 1){
+            return Array(numberLines - 1, row - 1)
+        }
+        else if(line == numberLines - 1 && row == 0){
+            return Array(line - 1, numberRows - 1)
+        }
+        else if(line > 0 && line < numberLines - 1 && row == 0){
+            return Array(line - 1, numberRows - 1)
+        }
+        else if(line == 0 && row > 0 && row < numberRows - 1){
+            return Array(numberLines - 1, row - 1)
+        }
+         else {
+            return Array(line - 1, row - 1)
+        }
+    }
+
+
+
+
+
   def main(args: Array[String]) {
  
     // initialise spark context
