@@ -168,7 +168,7 @@ object HelloWorld {
     val conf = new SparkConf().setAppName("HelloWorld")
     val sc = new SparkContext(conf)
 
-    val filename = "mesh_3.txt"
+    val filename = "mesh_3_h.txt"
     var numberRows = scala.io.Source.fromFile(filename).getLines.toArray.map(_.split(" ")).length
     var numberLines = scala.io.Source.fromFile(filename).getLines.toArray.length
     var matrixElements = scala.io.Source.fromFile(filename).getLines.toArray.map(_.split(" "))
@@ -225,26 +225,91 @@ object HelloWorld {
     var latticeBefore = Graph(cellsStreamed, relationshipCells)
 
     println("Resposta =======================")
-    /*val cellsResultBefore = latticeBefore.mapVertices((id, attr) =>  attr("1") +
+    val cellsResultBefore = latticeBefore.mapVertices((id, attr) =>  attr("1") +
     attr("2") + attr("3")
    + attr("4")
    + attr("5")
    + attr("6")
    + attr("7")
    + attr("8") 
-   + attr("0"))*/
-val cellsResultBefore = latticeBefore.mapVertices((id, attr) =>  attr("uy"))
+   + attr("0"))
+//val cellsResultBefore = latticeBefore.mapVertices((id, attr) =>  attr("ux"))
     cellsResultBefore.vertices.saveAsTextFile("Before.txt")
     println("Resposta =======================")
 
-    for( a <- 1 to 1){
+    for( a <- 1 to 20){
+        /*
+            8  1  2
+            7  0  3
+            6  5  4
+        */
 
-        // Stream things
+        // Stream and collide things
+         cellsStreamed = 
+            cellsStreamed.map(cell => {  
+            val rho: Double = cell._2("1") +
+                          cell._2("2") +
+                          cell._2("3") +
+                          cell._2("4") +
+                          cell._2("5") +
+                          cell._2("6") + 
+                          cell._2("7") +
+                          cell._2("8") +
+                          cell._2("0")
+                    val ux: Double = cell._2("ux")
+                    val uy: Double = cell._2("uy")
+                    val c: Double = 1/scala.math.sqrt(3)
+                    val c0: Array[Double] = Array(0, 0)
+                    val c_square: Double = c*c 
+                    val omega: Double =  1.98
+                    val epsilon_0: Double = 16/36
+                    val term_1: Double = (c0(0)*uy + c0(1)*ux)/c_square
+                    val term_2: Double = ((c0(0)*uy + c0(1)*ux)*(c0(0)*uy + c0(1)*ux) - (uy*uy + ux*ux)*(uy*uy + ux*ux)*c_square)/(2*c_square*c_square)
+                    val f_0_eq: Double = rho*epsilon_0*(1 + term_1 + term_2)
+                    var f_0 = cell._2("0")
+                    f_0 = f_0 - omega*(f_0 - f_0_eq)
+
+                (cell._1, Map("1" -> cell._2("1"),
+                    "2" -> cell._2("2"),
+                    "3" -> cell._2("3"),
+                    "4" -> cell._2("4"),
+                    "5" -> cell._2("5"),
+                    "6" -> cell._2("6"),
+                    "7" -> cell._2("7"),
+                    "8" -> cell._2("8"),
+                    "0" -> f_0,
+                    "ux" -> ux,
+                    "uy" -> uy  ))
+            })
+            latticeBefore = Graph(cellsStreamed, relationshipCells)
+
         cellsStreamed = 
         latticeBefore.aggregateMessages[Map[String,Double]](tripletFields => { 
             if (tripletFields.attr == "1"){
+                val rho: Double = tripletFields.srcAttr("1") +
+                      tripletFields.srcAttr("2") +
+                      tripletFields.srcAttr("3") +
+                      tripletFields.srcAttr("4") +
+                      tripletFields.srcAttr("5") +
+                      tripletFields.srcAttr("6") + 
+                      tripletFields.srcAttr("7") +
+                      tripletFields.srcAttr("8") +
+                      tripletFields.srcAttr("0")
+                val ux: Double = tripletFields.srcAttr("ux")
+                val uy: Double = tripletFields.srcAttr("uy")
+                val c: Double = 1/scala.math.sqrt(3)
+                val c1: Array[Double] = Array(+c, 0)
+                val c_square: Double = c*c 
+                val omega: Double =  1.98
+                val epsilon_1: Double = 4/36
+                val term_1: Double = (c1(0)*uy + c1(1)*ux)/c_square
+                val term_2: Double = ((c1(0)*uy + c1(1)*ux)*(c1(0)*uy + c1(1)*ux) - (uy*uy + ux*ux)*(uy*uy + ux*ux)*c_square)/(2*c_square*c_square)
+                val f_1_eq: Double = rho*epsilon_1*(1 + term_1 + term_2)
+                var f_1 = tripletFields.srcAttr("1")
+                f_1 = f_1 - omega*(f_1 - f_1_eq)
+
                 tripletFields.sendToDst(Map(
-                    "1" -> tripletFields.srcAttr("1"),
+                    "1" -> f_1,
                     "2" -> tripletFields.dstAttr("2"),
                     "3" -> tripletFields.dstAttr("3"),
                     "4" -> tripletFields.dstAttr("4"),
@@ -263,20 +328,42 @@ val cellsResultBefore = latticeBefore.mapVertices((id, attr) =>  attr("uy"))
 
         cellsStreamed = 
         latticeBefore.aggregateMessages[Map[String,Double]](tripletFields => { 
-            if (tripletFields.attr == "2"){
-                tripletFields.sendToDst(Map(
-                    "1" -> tripletFields.dstAttr("1"),
-                    "2" -> tripletFields.srcAttr("2"),
-                    "3" -> tripletFields.dstAttr("3"),
-                    "4" -> tripletFields.dstAttr("4"),
-                    "5" -> tripletFields.dstAttr("5"),
-                    "6" -> tripletFields.dstAttr("6"),
-                    "7" -> tripletFields.dstAttr("7"),
-                    "8" -> tripletFields.dstAttr("8"),
-                    "0" -> tripletFields.dstAttr("0"),
-                    "ux" -> tripletFields.dstAttr("ux"),
-                    "uy" -> tripletFields.dstAttr("uy")
-                ))
+            if(tripletFields.attr == "2"){
+                val rho: Double = tripletFields.srcAttr("1") +
+                      tripletFields.srcAttr("2") +
+                      tripletFields.srcAttr("3") +
+                      tripletFields.srcAttr("4") +
+                      tripletFields.srcAttr("5") +
+                      tripletFields.srcAttr("6") + 
+                      tripletFields.srcAttr("7") +
+                      tripletFields.srcAttr("8") +
+                      tripletFields.srcAttr("0")
+                val ux: Double = tripletFields.srcAttr("ux")
+                val uy: Double = tripletFields.srcAttr("uy")
+                val c: Double = 1/scala.math.sqrt(3)
+                val c2: Array[Double] = Array(+c, +c)
+                val c_square: Double = c*c 
+                val omega: Double =  1.98
+                val epsilon_2: Double = 1/36
+                val term_1: Double = (c2(0)*uy + c2(1)*ux)/c_square
+                val term_2: Double = ((c2(0)*uy + c2(1)*ux)*(c2(0)*uy + c2(1)*ux) - (uy*uy + ux*ux)*(uy*uy + ux*ux)*c_square)/(2*c_square*c_square)
+                val f_2_eq: Double = rho*epsilon_2*(1 + term_1 + term_2)
+                var f_2 = tripletFields.srcAttr("2")
+                f_2 = f_2 - omega*(f_2 - f_2_eq)
+
+                    tripletFields.sendToDst(Map(
+                        "1" -> tripletFields.dstAttr("1"),
+                        "2" -> f_2,
+                        "3" -> tripletFields.dstAttr("3"),
+                        "4" -> tripletFields.dstAttr("3"),
+                        "5" -> tripletFields.dstAttr("5"),
+                        "6" -> tripletFields.dstAttr("6"),
+                        "7" -> tripletFields.dstAttr("7"),
+                        "8" -> tripletFields.dstAttr("8"),
+                        "0" -> tripletFields.dstAttr("0"),
+                        "ux" -> tripletFields.dstAttr("ux"),
+                        "uy" -> tripletFields.dstAttr("uy")
+                    ))
             }
         },
         (a, b) => (a))
@@ -285,10 +372,32 @@ val cellsResultBefore = latticeBefore.mapVertices((id, attr) =>  attr("uy"))
         cellsStreamed = 
         latticeBefore.aggregateMessages[Map[String,Double]](tripletFields => { 
             if(tripletFields.attr == "3"){
+                val rho: Double = tripletFields.srcAttr("1") +
+                  tripletFields.srcAttr("2") +
+                  tripletFields.srcAttr("3") +
+                  tripletFields.srcAttr("4") +
+                  tripletFields.srcAttr("5") +
+                  tripletFields.srcAttr("6") + 
+                  tripletFields.srcAttr("7") +
+                  tripletFields.srcAttr("8") +
+                  tripletFields.srcAttr("0")
+                val ux: Double = tripletFields.srcAttr("ux")
+                val uy: Double = tripletFields.srcAttr("uy")
+                val c: Double = 1/scala.math.sqrt(3)
+                val c3: Array[Double] = Array(0, +c)
+                val c_square: Double = c*c 
+                val omega: Double =  1.98
+                val epsilon_3: Double = 4/36
+                val term_1: Double = (c3(0)*uy + c3(1)*ux)/c_square
+                val term_2: Double = ((c3(0)*uy + c3(1)*ux)*(c3(0)*uy + c3(1)*ux) - (uy*uy + ux*ux)*(uy*uy + ux*ux)*c_square)/(2*c_square*c_square)
+                val f_3_eq: Double = rho*epsilon_3*(1 + term_1 + term_2)
+                var f_3 = tripletFields.srcAttr("3")
+                f_3 = f_3 - omega*(f_3 - f_3_eq)
+
                     tripletFields.sendToDst(Map(
                         "1" -> tripletFields.dstAttr("1"),
                         "2" -> tripletFields.dstAttr("2"),
-                        "3" -> tripletFields.srcAttr("3"),
+                        "3" -> f_3,
                         "4" -> tripletFields.dstAttr("4"),
                         "5" -> tripletFields.dstAttr("5"),
                         "6" -> tripletFields.dstAttr("6"),
@@ -306,11 +415,33 @@ val cellsResultBefore = latticeBefore.mapVertices((id, attr) =>  attr("uy"))
          cellsStreamed = 
         latticeBefore.aggregateMessages[Map[String,Double]](tripletFields => { 
             if(tripletFields.attr == "4"){
+                val rho: Double = tripletFields.srcAttr("1") +
+                      tripletFields.srcAttr("2") +
+                      tripletFields.srcAttr("3") +
+                      tripletFields.srcAttr("4") +
+                      tripletFields.srcAttr("5") +
+                      tripletFields.srcAttr("6") + 
+                      tripletFields.srcAttr("7") +
+                      tripletFields.srcAttr("8") +
+                      tripletFields.srcAttr("0")
+                val ux: Double = tripletFields.srcAttr("ux")
+                val uy: Double = tripletFields.srcAttr("uy")
+                val c: Double = 1/scala.math.sqrt(3)
+                val c4: Array[Double] = Array(-c, +c)
+                val c_square: Double = c*c 
+                val omega: Double =  1.98
+                val epsilon_4: Double = 1/36
+                val term_1: Double = (c4(0)*uy + c4(1)*ux)/c_square
+                val term_2: Double = ((c4(0)*uy + c4(1)*ux)*(c4(0)*uy + c4(1)*ux) - (uy*uy + ux*ux)*(uy*uy + ux*ux)*c_square)/(2*c_square*c_square)
+                val f_4_eq: Double = rho*epsilon_4*(1 + term_1 + term_2)
+                var f_4 = tripletFields.srcAttr("4")
+                f_4 = f_4 - omega*(f_4 - f_4_eq)
+
                     tripletFields.sendToDst(Map(
                         "1" -> tripletFields.dstAttr("1"),
                         "2" -> tripletFields.dstAttr("2"),
                         "3" -> tripletFields.dstAttr("3"),
-                        "4" -> tripletFields.srcAttr("4"),
+                        "4" -> f_4,
                         "5" -> tripletFields.dstAttr("5"),
                         "6" -> tripletFields.dstAttr("6"),
                         "7" -> tripletFields.dstAttr("7"),
@@ -324,15 +455,37 @@ val cellsResultBefore = latticeBefore.mapVertices((id, attr) =>  attr("uy"))
         (a, b) => (a))
         latticeBefore = Graph(cellsStreamed, relationshipCells)
 
-         cellsStreamed = 
+        cellsStreamed = 
         latticeBefore.aggregateMessages[Map[String,Double]](tripletFields => { 
             if(tripletFields.attr == "5"){
+                val rho: Double = tripletFields.srcAttr("1") +
+                      tripletFields.srcAttr("2") +
+                      tripletFields.srcAttr("3") +
+                      tripletFields.srcAttr("4") +
+                      tripletFields.srcAttr("5") +
+                      tripletFields.srcAttr("6") + 
+                      tripletFields.srcAttr("7") +
+                      tripletFields.srcAttr("8") +
+                      tripletFields.srcAttr("0")
+                val ux: Double = tripletFields.srcAttr("ux")
+                val uy: Double = tripletFields.srcAttr("uy")
+                val c: Double = 1/scala.math.sqrt(3)
+                val c5: Array[Double] = Array(-c, 0)
+                val c_square: Double = c*c 
+                val omega: Double =  1.98
+                val epsilon_5: Double = 1/36
+                val term_1: Double = (c5(0)*uy + c5(1)*ux)/c_square
+                val term_2: Double = ((c5(0)*uy + c5(1)*ux)*(c5(0)*uy + c5(1)*ux) - (uy*uy + ux*ux)*(uy*uy + ux*ux)*c_square)/(2*c_square*c_square)
+                val f_5_eq: Double = rho*epsilon_5*(1 + term_1 + term_2)
+                var f_5 = tripletFields.srcAttr("5")
+                f_5 = f_5 - omega*(f_5 - f_5_eq)
+
                     tripletFields.sendToDst(Map(
                         "1" -> tripletFields.dstAttr("1"),
                         "2" -> tripletFields.dstAttr("2"),
                         "3" -> tripletFields.dstAttr("3"),
-                        "4" -> tripletFields.dstAttr("4"),
-                        "5" -> tripletFields.srcAttr("5"),
+                        "4" -> tripletFields.dstAttr("3"),
+                        "5" -> f_5,
                         "6" -> tripletFields.dstAttr("6"),
                         "7" -> tripletFields.dstAttr("7"),
                         "8" -> tripletFields.dstAttr("8"),
@@ -348,13 +501,35 @@ val cellsResultBefore = latticeBefore.mapVertices((id, attr) =>  attr("uy"))
          cellsStreamed = 
         latticeBefore.aggregateMessages[Map[String,Double]](tripletFields => { 
             if(tripletFields.attr == "6"){
+                    val rho: Double = tripletFields.srcAttr("1") +
+                      tripletFields.srcAttr("2") +
+                      tripletFields.srcAttr("3") +
+                      tripletFields.srcAttr("4") +
+                      tripletFields.srcAttr("5") +
+                      tripletFields.srcAttr("6") + 
+                      tripletFields.srcAttr("7") +
+                      tripletFields.srcAttr("8") +
+                      tripletFields.srcAttr("0")
+                    val ux: Double = tripletFields.srcAttr("ux")
+                    val uy: Double = tripletFields.srcAttr("uy")
+                    val c: Double = 1/scala.math.sqrt(3)
+                    val c6: Array[Double] = Array(-c, -c)
+                    val c_square: Double = c*c 
+                    val omega: Double =  1.98
+                    val epsilon_6: Double = 1/36
+                    val term_1: Double = (c6(0)*uy + c6(1)*ux)/c_square
+                    val term_2: Double = ((c6(0)*uy + c6(1)*ux)*(c6(0)*uy + c6(1)*ux) - (uy*uy + ux*ux)*(uy*uy + ux*ux)*c_square)/(2*c_square*c_square)
+                    val f_6_eq: Double = rho*epsilon_6*(1 + term_1 + term_2)
+                    var f_6 = tripletFields.srcAttr("6")
+                    f_6 = f_6 - omega*(f_6 - f_6_eq)
+
                     tripletFields.sendToDst(Map(
                         "1" -> tripletFields.dstAttr("1"),
                         "2" -> tripletFields.dstAttr("2"),
                         "3" -> tripletFields.dstAttr("3"),
                         "4" -> tripletFields.dstAttr("4"),
                         "5" -> tripletFields.dstAttr("5"),
-                        "6" -> tripletFields.srcAttr("6"),
+                        "6" -> f_6,
                         "7" -> tripletFields.dstAttr("7"),
                         "8" -> tripletFields.dstAttr("8"),
                         "0" -> tripletFields.dstAttr("0"),
@@ -370,6 +545,28 @@ val cellsResultBefore = latticeBefore.mapVertices((id, attr) =>  attr("uy"))
          cellsStreamed = 
         latticeBefore.aggregateMessages[Map[String,Double]](tripletFields => { 
             if(tripletFields.attr == "7"){
+                    val rho: Double = tripletFields.srcAttr("1") +
+                      tripletFields.srcAttr("2") +
+                      tripletFields.srcAttr("3") +
+                      tripletFields.srcAttr("4") +
+                      tripletFields.srcAttr("5") +
+                      tripletFields.srcAttr("6") + 
+                      tripletFields.srcAttr("7") +
+                      tripletFields.srcAttr("8") +
+                      tripletFields.srcAttr("0")
+                    val ux: Double = tripletFields.srcAttr("ux")
+                    val uy: Double = tripletFields.srcAttr("uy")
+                    val c: Double = 1/scala.math.sqrt(3)
+                    val c7: Array[Double] = Array(-c, 0)
+                    val c_square: Double = c*c 
+                    val omega: Double =  1.98
+                    val epsilon_7: Double = 4/36
+                    val term_1: Double = (c7(0)*uy + c7(1)*ux)/c_square
+                    val term_2: Double = ((c7(0)*uy + c7(1)*ux)*(c7(0)*uy + c7(1)*ux) - (uy*uy + ux*ux)*(uy*uy + ux*ux)*c_square)/(2*c_square*c_square)
+                    val f_7_eq: Double = rho*epsilon_7*(1 + term_1 + term_2)
+                    var f_7 = tripletFields.srcAttr("7")
+                    f_7 = f_7 - omega*(f_7 - f_7_eq)
+
                     tripletFields.sendToDst(Map(
                         "1" -> tripletFields.dstAttr("1"),
                         "2" -> tripletFields.dstAttr("2"),
@@ -377,7 +574,7 @@ val cellsResultBefore = latticeBefore.mapVertices((id, attr) =>  attr("uy"))
                         "4" -> tripletFields.dstAttr("4"),
                         "5" -> tripletFields.dstAttr("5"),
                         "6" -> tripletFields.dstAttr("6"),
-                        "7" -> tripletFields.srcAttr("7"),
+                        "7" -> f_7,
                         "8" -> tripletFields.dstAttr("8"),
                         "0" -> tripletFields.dstAttr("0"),
                         "ux" -> tripletFields.dstAttr("ux"),
@@ -392,6 +589,28 @@ val cellsResultBefore = latticeBefore.mapVertices((id, attr) =>  attr("uy"))
          cellsStreamed = 
         latticeBefore.aggregateMessages[Map[String,Double]](tripletFields => { 
             if(tripletFields.attr == "8"){
+                    val rho: Double = tripletFields.srcAttr("1") +
+                      tripletFields.srcAttr("2") +
+                      tripletFields.srcAttr("3") +
+                      tripletFields.srcAttr("4") +
+                      tripletFields.srcAttr("5") +
+                      tripletFields.srcAttr("6") + 
+                      tripletFields.srcAttr("7") +
+                      tripletFields.srcAttr("8") +
+                      tripletFields.srcAttr("0")
+                    val ux: Double = tripletFields.srcAttr("ux")
+                    val uy: Double = tripletFields.srcAttr("uy")
+                    val c: Double = 1/scala.math.sqrt(3)
+                    val c8: Array[Double] = Array(-c, -c)
+                    val c_square: Double = c*c 
+                    val omega: Double =  1.98
+                    val epsilon_8: Double = 1/36
+                    val term_1: Double = (c8(0)*uy + c8(1)*ux)/c_square
+                    val term_2: Double = ((c8(0)*uy + c8(1)*ux)*(c8(0)*uy + c8(1)*ux) - (uy*uy + ux*ux)*(uy*uy + ux*ux)*c_square)/(2*c_square*c_square)
+                    val f_8_eq: Double = rho*epsilon_8*(1 + term_1 + term_2)
+                    var f_8 = tripletFields.srcAttr("8")
+                    f_8 = f_8 - omega*(f_8 - f_8_eq)
+
                     tripletFields.sendToDst(Map(
                         "1" -> tripletFields.dstAttr("1"),
                         "2" -> tripletFields.dstAttr("2"),
@@ -400,7 +619,7 @@ val cellsResultBefore = latticeBefore.mapVertices((id, attr) =>  attr("uy"))
                         "5" -> tripletFields.dstAttr("5"),
                         "6" -> tripletFields.dstAttr("6"),
                         "7" -> tripletFields.dstAttr("7"),
-                        "8" -> tripletFields.srcAttr("8"),
+                        "8" -> f_8,
                         "0" -> tripletFields.dstAttr("0"),
                         "ux" -> tripletFields.dstAttr("ux"),
                         "uy" -> tripletFields.dstAttr("uy")
@@ -474,15 +693,15 @@ val cellsResultBefore = latticeBefore.mapVertices((id, attr) =>  attr("uy"))
     }
 
     println("Resposta =======================")
-    /*val cellsResultAfter = latticeBefore.mapVertices((id, attr) => attr("1") +
+    val cellsResultAfter = latticeBefore.mapVertices((id, attr) => attr("1") +
     attr("2") + attr("3")
    + attr("4")
    + attr("5")
    + attr("6")
    + attr("7")
    + attr("8") 
-   + attr("0"))*/
-    val cellsResultAfter = latticeBefore.mapVertices((id, attr) => attr("uy"))
+   + attr("0"))
+    //val cellsResultAfter = latticeBefore.mapVertices((id, attr) => attr("ux"))
     cellsResultAfter.vertices.saveAsTextFile("After.txt")
     println("Resposta =======================")
 
