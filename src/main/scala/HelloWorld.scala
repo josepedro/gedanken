@@ -175,7 +175,91 @@ object HelloWorld {
     preprocessor.generateDefaultMesh()
     preprocessor.preprocess()
 
+    val textFile = sc.textFile("output_mr0/input.txt")
+    textFile.map(line => line.split(" ").head).foreach(println)
 
+
+    val toStreamDirection = textFile.map({ line =>
+      val idDirectionsFis = line.split(" ")
+      val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
+      val fis = directionsFis.map(element => element.split(":").last)
+      val directions = directionsFis.map(element => element.split(":").head)
+      val id = idDirectionsFis.head
+      (id + " " + directions.take(1).last + ":" + fis.take(1).last)
+    }).union(textFile.map({ line =>
+      val idDirectionsFis = line.split(" ")
+      val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
+      val fis = directionsFis.map(element => element.split(":").last)
+      val directions = directionsFis.map(element => element.split(":").head)
+      val id = idDirectionsFis.head
+      (id + " " + directions.take(2).last + ":" + fis.take(2).last)
+    })).union(textFile.map({ line =>
+      val idDirectionsFis = line.split(" ")
+      val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
+      val fis = directionsFis.map(element => element.split(":").last)
+      val directions = directionsFis.map(element => element.split(":").head)
+      val id = idDirectionsFis.head
+      (id + " " + directions.take(3).last + ":" + fis.take(3).last)
+    })).union(textFile.map({ line =>
+      val idDirectionsFis = line.split(" ")
+      val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
+      val fis = directionsFis.map(element => element.split(":").last)
+      val directions = directionsFis.map(element => element.split(":").head)
+      val id = idDirectionsFis.head
+      (id + " " + directions.take(4).last + ":" + fis.take(4).last)
+    })).union(textFile.map({ line =>
+      val idDirectionsFis = line.split(" ")
+      val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
+      val fis = directionsFis.map(element => element.split(":").last)
+      val directions = directionsFis.map(element => element.split(":").head)
+      val id = idDirectionsFis.head
+      (id + " " + directions.take(5).last + ":" + fis.take(5).last)
+    })).union(textFile.map({ line =>
+      val idDirectionsFis = line.split(" ")
+      val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
+      val fis = directionsFis.map(element => element.split(":").last)
+      val directions = directionsFis.map(element => element.split(":").head)
+      val id = idDirectionsFis.head
+      (id + " " + directions.take(6).last + ":" + fis.take(6).last)
+    })).union(textFile.map({ line =>
+      val idDirectionsFis = line.split(" ")
+      val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
+      val fis = directionsFis.map(element => element.split(":").last)
+      val directions = directionsFis.map(element => element.split(":").head)
+      val id = idDirectionsFis.head
+      (id + " " + directions.take(7).last + ":" + fis.take(7).last)
+    })).union(textFile.map({ line =>
+      val idDirectionsFis = line.split(" ")
+      val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
+      val fis = directionsFis.map(element => element.split(":").last)
+      val directions = directionsFis.map(element => element.split(":").head)
+      val id = idDirectionsFis.head
+      (id + " " + directions.take(8).last + ":" + fis.take(8).last)
+    })).union(textFile.map({ line =>
+      val idDirectionsFis = line.split(" ")
+      val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
+      val fis = directionsFis.map(element => element.split(":").last)
+      val directions = directionsFis.map(element => element.split(":").head)
+      val id = idDirectionsFis.head
+      (id + " " + directions.take(9).last + ":" + fis.take(9).last)
+    })).map(line => (line.split(" ").head, line.split(" ").last))
+
+    toStreamDirection.reduceByKey(_+ " " + _).foreach(println)
+
+
+
+    val idDensities = textFile.map({ line =>
+      val idDirectionsFis = line.split(" ")
+      val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
+      val fis = directionsFis.map(element => element.split(":").last.toDouble)
+      val density = fis.reduce((a,b) => a + b)
+      val id = idDirectionsFis.head
+      id + " " + density.toString
+    })
+
+
+
+    idDensities.foreach(println)
 
     println("Resposta =======================")
 
