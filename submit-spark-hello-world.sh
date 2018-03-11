@@ -13,4 +13,4 @@ JAR=`ls target/scala-2.11/*.jar`
 JARFILE=`pwd`/${JAR}
 
 # Run it locally
-${SPARK_HOME}/bin/spark-submit --class HelloWorld --master local $JARFILE
+${SPARK_HOME}/bin/spark-submit --class HelloWorld --driver-memory 1g --master local $JARFILE
