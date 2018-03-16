@@ -174,81 +174,152 @@ object HelloWorld {
     val preprocessor = new Preprocessor(inputFile, inputFileMR)
     preprocessor.generateDefaultMesh()
     preprocessor.preprocess()
+    val number_lines = preprocessor.sizeVertical;
+    val number_rows = preprocessor.sizeAxial;
 
-    val textFile = sc.textFile("output_mr0/input.txt")
-    textFile.map(line => line.split(" ").head).foreach(println)
+
+    var toStreamDirection = sc.textFile("output_mr0/input.txt")
+
+    toStreamDirection = toStreamDirection.map({ line =>
+      val idDirectionsFis = line.split(" ")
+      val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
+      val fis = directionsFis.map(element => element.split(":").last.toDouble)
+      var density = fis.reduce((a,b) => a + b)
+
+      val c = 1 / Math.sqrt(3)
+      val c_square = c * c
+      val omega = 1.9
+      val resultCollide = ""
+      val f1 = 3.0
+      val f2 = 4.5
+      val f3 = 1.5
+      val w0 = (16.0 / 36.0).toDouble
+      val w1 = (4.0 / 36.0).toDouble
+      val w2 = (1.0 / 36.0).toDouble
+      val rt0 = density*w0
+      val rt1 = density*w1
+      val rt2 = density*w2
+      val ciX = Array(0, 0, +c, +c, +c, 0, -c, -c, -c)
+      val ciY = Array(0, +c, +c, 0, -c, -c, -c, 0, +c)
+      var velocityX : Double = 0
+      var velocityY : Double = 0
+      for (i <- 1 to 9){
+        velocityX = fis.take(i).last*ciX(i-1) + velocityX
+        velocityY = fis.take(i).last*ciY(i-1) + velocityY
+      }
+      velocityX = velocityX/density
+      velocityY = velocityY/density
+
+      val uxsq = velocityX*velocityX;
+      val uysq = velocityY*velocityY;
+      val usq = uxsq + uysq;
+      var result = ""
+      for (i <- 1 to 9){
+        var fi = fis(i - 1)
+        var fiEq = 6666.6666;
+        if (i - 1 == 0)
+          fiEq = rt0*(1 - f3*usq)
+        else if (i - 1 == 3)
+          fiEq = rt1*(1 + f1*velocityX +f2*uxsq -f3*usq)
+        else if (i - 1 == 5)
+          fiEq = rt1*(1 + f1*velocityY +f2*uysq -f3*usq)
+        else if (i - 1 == 7)
+          fiEq = rt1*(1 - f1*velocityX +f2*uxsq -f3*usq)
+        else if (i - 1 == 1)
+          fiEq = rt1*(1 - f1*velocityY +f2*uysq -f3*usq)
+        else if (i - 1 == 2)
+          fiEq = rt2*(1 + f1*(velocityX + velocityY) + f2*(velocityX + velocityY)*(velocityX + velocityY) - f3*usq)
+        else if (i - 1 == 4)
+          fiEq = rt2*(1 + f1*(-velocityX + velocityY) + f2*(-velocityX + velocityY)*(-velocityX + velocityY) - f3*usq)
+        else if (i - 1 == 6)
+          fiEq = rt2*(1 + f1*(-velocityX - velocityY) + f2*(-velocityX - velocityY)*(-velocityX - velocityY) - f3*usq)
+        else if (i - 1 == 8)
+          fiEq = rt2*(1 + f1*(velocityX - velocityY) + f2*(velocityX - velocityY)*(velocityX - velocityY) - f3*usq)
+
+        fi = (1 - omega)*fi + omega*fiEq
+        result += " " + (i - 1).toString + ":" + fi.toString
+      }
+      val id = idDirectionsFis.head
+      (id + result)
+    })
 
 
-    val toStreamDirection = textFile.map({ line =>
+    toStreamDirection = toStreamDirection.map({ line =>
       val idDirectionsFis = line.split(" ")
       val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
       val fis = directionsFis.map(element => element.split(":").last)
       val directions = directionsFis.map(element => element.split(":").head)
       val id = idDirectionsFis.head
       (id + " " + directions.take(1).last + ":" + fis.take(1).last)
-    }).union(textFile.map({ line =>
+    }).union(toStreamDirection.map({ line =>
       val idDirectionsFis = line.split(" ")
       val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
       val fis = directionsFis.map(element => element.split(":").last)
       val directions = directionsFis.map(element => element.split(":").head)
       val id = idDirectionsFis.head
-      (id + " " + directions.take(2).last + ":" + fis.take(2).last)
-    })).union(textFile.map({ line =>
+      val newId = StreamD2Q9.get1_id(id.toInt, number_lines, number_rows).toString
+      (newId + " " + directions.take(2).last + ":" + fis.take(2).last)
+    })).union(toStreamDirection.map({ line =>
       val idDirectionsFis = line.split(" ")
       val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
       val fis = directionsFis.map(element => element.split(":").last)
       val directions = directionsFis.map(element => element.split(":").head)
       val id = idDirectionsFis.head
-      (id + " " + directions.take(3).last + ":" + fis.take(3).last)
-    })).union(textFile.map({ line =>
+      val newId = StreamD2Q9.get2_id(id.toInt, number_lines, number_rows).toString
+      (newId + " " + directions.take(3).last + ":" + fis.take(3).last)
+    })).union(toStreamDirection.map({ line =>
       val idDirectionsFis = line.split(" ")
       val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
       val fis = directionsFis.map(element => element.split(":").last)
       val directions = directionsFis.map(element => element.split(":").head)
       val id = idDirectionsFis.head
-      (id + " " + directions.take(4).last + ":" + fis.take(4).last)
-    })).union(textFile.map({ line =>
+      val newId = StreamD2Q9.get3_id(id.toInt, number_lines, number_rows).toString
+      (newId + " " + directions.take(4).last + ":" + fis.take(4).last)
+    })).union(toStreamDirection.map({ line =>
       val idDirectionsFis = line.split(" ")
       val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
       val fis = directionsFis.map(element => element.split(":").last)
       val directions = directionsFis.map(element => element.split(":").head)
       val id = idDirectionsFis.head
-      (id + " " + directions.take(5).last + ":" + fis.take(5).last)
-    })).union(textFile.map({ line =>
+      val newId = StreamD2Q9.get4_id(id.toInt, number_lines, number_rows).toString
+      (newId + " " + directions.take(5).last + ":" + fis.take(5).last)
+    })).union(toStreamDirection.map({ line =>
       val idDirectionsFis = line.split(" ")
       val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
       val fis = directionsFis.map(element => element.split(":").last)
       val directions = directionsFis.map(element => element.split(":").head)
       val id = idDirectionsFis.head
-      (id + " " + directions.take(6).last + ":" + fis.take(6).last)
-    })).union(textFile.map({ line =>
+      val newId = StreamD2Q9.get5_id(id.toInt, number_lines, number_rows).toString
+      (newId + " " + directions.take(6).last + ":" + fis.take(6).last)
+    })).union(toStreamDirection.map({ line =>
       val idDirectionsFis = line.split(" ")
       val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
       val fis = directionsFis.map(element => element.split(":").last)
       val directions = directionsFis.map(element => element.split(":").head)
       val id = idDirectionsFis.head
-      (id + " " + directions.take(7).last + ":" + fis.take(7).last)
-    })).union(textFile.map({ line =>
+      val newId = StreamD2Q9.get6_id(id.toInt, number_lines, number_rows).toString
+      (newId + " " + directions.take(7).last + ":" + fis.take(7).last)
+    })).union(toStreamDirection.map({ line =>
       val idDirectionsFis = line.split(" ")
       val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
       val fis = directionsFis.map(element => element.split(":").last)
       val directions = directionsFis.map(element => element.split(":").head)
       val id = idDirectionsFis.head
-      (id + " " + directions.take(8).last + ":" + fis.take(8).last)
-    })).union(textFile.map({ line =>
+      val newId = StreamD2Q9.get7_id(id.toInt, number_lines, number_rows).toString
+      (newId + " " + directions.take(8).last + ":" + fis.take(8).last)
+    })).union(toStreamDirection.map({ line =>
       val idDirectionsFis = line.split(" ")
       val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
       val fis = directionsFis.map(element => element.split(":").last)
       val directions = directionsFis.map(element => element.split(":").head)
       val id = idDirectionsFis.head
-      (id + " " + directions.take(9).last + ":" + fis.take(9).last)
-    })).map(line => (line.split(" ").head, line.split(" ").last))
+      val newId = StreamD2Q9.get8_id(id.toInt, number_lines, number_rows).toString
+      (newId + " " + directions.take(9).last + ":" + fis.take(9).last)
+    })).map(line => (line.split(" ").head, line.split(" ").last)).reduceByKey(_+ " " + _).map(line => line._1 + " " + line._2)
 
-    toStreamDirection.reduceByKey(_+ " " + _).foreach(println)
 
 
-
-    val idDensities = textFile.map({ line =>
+    val idDensities = toStreamDirection.map({ line =>
       val idDirectionsFis = line.split(" ")
       val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
       val fis = directionsFis.map(element => element.split(":").last.toDouble)
@@ -258,8 +329,11 @@ object HelloWorld {
     })
 
 
-
-    idDensities.foreach(println)
+    idDensities.coalesce(1).saveAsTextFile("/home/pedro/git/spark-hello-world/final_result")
+    val posprocessor = new Posprocessor("/home/pedro/git/spark-hello-world/final_result" + "/part-00000",
+      "/home/pedro/git/spark-hello-world/final_result" + "/outputFinal.txt")
+    posprocessor.posprocess()
+    //idDensities.foreach(println)
 
     println("Resposta =======================")
 

@@ -9,6 +9,8 @@ public class Preprocessor {
 
     private String fileInputPath;
     private String fileOutputPath;
+    public int sizeAxial;
+    public int sizeVertical;
 
     public Preprocessor(String fileInputPath, String fileOutputPath) {
         this.fileInputPath = fileInputPath;
@@ -16,8 +18,8 @@ public class Preprocessor {
     }
 
     public void generateDefaultMesh() throws IOException {
-        int sizeAxial = 6;
-        int sizeVertical = 6;
+        sizeAxial = 6;
+        sizeVertical = 6;
         BigDecimal density = new BigDecimal("1", MathContext.DECIMAL32);
         BigDecimal deltaDensity = new BigDecimal("0.0009000000000", MathContext.DECIMAL128);
 
