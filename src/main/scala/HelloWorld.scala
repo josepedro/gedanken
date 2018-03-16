@@ -178,9 +178,9 @@ object HelloWorld {
     val number_rows = preprocessor.sizeAxial;
 
 
-    var toStreamDirection = sc.textFile("output_mr0/input.txt")
+    var lattice = sc.textFile("output_mr0/input.txt")
 
-    toStreamDirection = toStreamDirection.map({ line =>
+    lattice = lattice.map({ line =>
       val idDirectionsFis = line.split(" ")
       val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
       val fis = directionsFis.map(element => element.split(":").last.toDouble)
@@ -216,7 +216,7 @@ object HelloWorld {
       var result = ""
       for (i <- 1 to 9){
         var fi = fis(i - 1)
-        var fiEq = 6666.6666;
+        var fiEq = 666666666666666666.6666;
         if (i - 1 == 0)
           fiEq = rt0*(1 - f3*usq)
         else if (i - 1 == 3)
@@ -244,14 +244,14 @@ object HelloWorld {
     })
 
 
-    toStreamDirection = toStreamDirection.map({ line =>
+    lattice = lattice.map({ line =>
       val idDirectionsFis = line.split(" ")
       val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
       val fis = directionsFis.map(element => element.split(":").last)
       val directions = directionsFis.map(element => element.split(":").head)
       val id = idDirectionsFis.head
       (id + " " + directions.take(1).last + ":" + fis.take(1).last)
-    }).union(toStreamDirection.map({ line =>
+    }).union(lattice.map({ line =>
       val idDirectionsFis = line.split(" ")
       val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
       val fis = directionsFis.map(element => element.split(":").last)
@@ -259,7 +259,7 @@ object HelloWorld {
       val id = idDirectionsFis.head
       val newId = StreamD2Q9.get1_id(id.toInt, number_lines, number_rows).toString
       (newId + " " + directions.take(2).last + ":" + fis.take(2).last)
-    })).union(toStreamDirection.map({ line =>
+    })).union(lattice.map({ line =>
       val idDirectionsFis = line.split(" ")
       val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
       val fis = directionsFis.map(element => element.split(":").last)
@@ -267,7 +267,7 @@ object HelloWorld {
       val id = idDirectionsFis.head
       val newId = StreamD2Q9.get2_id(id.toInt, number_lines, number_rows).toString
       (newId + " " + directions.take(3).last + ":" + fis.take(3).last)
-    })).union(toStreamDirection.map({ line =>
+    })).union(lattice.map({ line =>
       val idDirectionsFis = line.split(" ")
       val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
       val fis = directionsFis.map(element => element.split(":").last)
@@ -275,7 +275,7 @@ object HelloWorld {
       val id = idDirectionsFis.head
       val newId = StreamD2Q9.get3_id(id.toInt, number_lines, number_rows).toString
       (newId + " " + directions.take(4).last + ":" + fis.take(4).last)
-    })).union(toStreamDirection.map({ line =>
+    })).union(lattice.map({ line =>
       val idDirectionsFis = line.split(" ")
       val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
       val fis = directionsFis.map(element => element.split(":").last)
@@ -283,7 +283,7 @@ object HelloWorld {
       val id = idDirectionsFis.head
       val newId = StreamD2Q9.get4_id(id.toInt, number_lines, number_rows).toString
       (newId + " " + directions.take(5).last + ":" + fis.take(5).last)
-    })).union(toStreamDirection.map({ line =>
+    })).union(lattice.map({ line =>
       val idDirectionsFis = line.split(" ")
       val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
       val fis = directionsFis.map(element => element.split(":").last)
@@ -291,7 +291,7 @@ object HelloWorld {
       val id = idDirectionsFis.head
       val newId = StreamD2Q9.get5_id(id.toInt, number_lines, number_rows).toString
       (newId + " " + directions.take(6).last + ":" + fis.take(6).last)
-    })).union(toStreamDirection.map({ line =>
+    })).union(lattice.map({ line =>
       val idDirectionsFis = line.split(" ")
       val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
       val fis = directionsFis.map(element => element.split(":").last)
@@ -299,7 +299,7 @@ object HelloWorld {
       val id = idDirectionsFis.head
       val newId = StreamD2Q9.get6_id(id.toInt, number_lines, number_rows).toString
       (newId + " " + directions.take(7).last + ":" + fis.take(7).last)
-    })).union(toStreamDirection.map({ line =>
+    })).union(lattice.map({ line =>
       val idDirectionsFis = line.split(" ")
       val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
       val fis = directionsFis.map(element => element.split(":").last)
@@ -307,7 +307,7 @@ object HelloWorld {
       val id = idDirectionsFis.head
       val newId = StreamD2Q9.get7_id(id.toInt, number_lines, number_rows).toString
       (newId + " " + directions.take(8).last + ":" + fis.take(8).last)
-    })).union(toStreamDirection.map({ line =>
+    })).union(lattice.map({ line =>
       val idDirectionsFis = line.split(" ")
       val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
       val fis = directionsFis.map(element => element.split(":").last)
@@ -319,7 +319,7 @@ object HelloWorld {
 
 
 
-    val idDensities = toStreamDirection.map({ line =>
+    val idDensities = lattice.map({ line =>
       val idDirectionsFis = line.split(" ")
       val directionsFis =  idDirectionsFis.slice(1, idDirectionsFis.size)
       val fis = directionsFis.map(element => element.split(":").last.toDouble)
@@ -334,6 +334,7 @@ object HelloWorld {
       "/home/pedro/git/spark-hello-world/final_result" + "/outputFinal.txt")
     posprocessor.posprocess()
     //idDensities.foreach(println)
+
 
     println("Resposta =======================")
 
